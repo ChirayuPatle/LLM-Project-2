@@ -1,55 +1,43 @@
 import os
 import streamlit as st
 
-# import python build in os tools
-from langchain_community.llms import ollama
+from langchain_community.llms import Ollama
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import strOutParser
+from langchain_core.output_parsers import StrOutputParser
 
-# Step 1 : create project template
-# Define how AI behaves and how user recieves user input 
+# step1: create prompt template
+# this defin how ai should behave and how it recieves user input
 
 prompt = ChatPromptTemplate.from_messages(
     {
-        # system messages define AI behaviour
+        #system messages define AI behaviour
         ("system","you are a helpful assistant. please respomt clearly to the questions asked."),
-
-        # user message contains placeholder{question}
+        #user message contains placeholder{question}
         ("user","Question: {question}")
     }
 )
 
-# Step 2 : streamlit app UI
+#step 2: stream app ui
 
-st.set_page_config(
-    page_title="Mini AI App",
-    page_icon="",
-    layout="centered"
-)
+#App title
+st.title("langchain demo with gemma model(ollama)")
 
-st.title("Mini AI Assistant")
-st.write("This is a simple Streamlit UI example.")
+#text input box for user input question
+input_txt = st.text_input("What question do you have in your mind?")
 
+#step 3: load ollama model
 
-st.sidebar.header("Settings")
-temperature = st.sidebar.slider("Creativity Level", 0.0, 1.0, 0.5)
+#load local gemma model
+LLM = Ollama(model="gemma2:2b")
 
-user_input = st.text_input("Ask something:")
+#condition-convert output model to string
 
-if st.button("Generate Response"):
-    if user_input:
-        st.success("Response Generated!")
-        st.write(f"**You asked:** {user_input}")
-        st.write(f"**Creativity Level:** {temperature}")
-        st.info("This is a demo response from your mini AI app.")
-    else:
-        st.warning("Please enter a question first!")
+output_parser = StrOutputParser()
 
-st.markdown("---")
-st.caption("Built with using Streamlit")
+#create langchain pipeline (prompt --> model --> output_parser)
+chain = prompt | LLM | output_parser
 
-
-# Step 3 : load ollama model
-
-# load local gemma model
-LLM = ollama(model="gemma2:2b")
+#step4: run the model when user inputs the question
+if input_txt:
+    response = chain.invoke({"question":input_txt})
+    st.write(response)
